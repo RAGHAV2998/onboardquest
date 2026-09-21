@@ -1638,7 +1638,7 @@ h1 {
 
 .mission-list-item {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   min-height: 68px;
@@ -1647,7 +1647,6 @@ h1 {
   border-radius: 4px;
   background: rgba(255, 252, 242, 0.84);
   color: #1d2a24;
-  cursor: pointer;
   text-align: left;
 }
 
@@ -1657,15 +1656,42 @@ h1 {
   background: #fffaf0;
 }
 
-.mission-list-item:hover,
-.mission-list-item:focus-visible {
+.mission-list-item:hover {
   border-color: #1d2a24;
 }
 
-.mission-list-item:focus-visible,
+.mission-complete-checkbox:focus-visible,
+.mission-list-select:focus-visible,
 .mission-complete-button:focus-visible {
   outline: 3px solid #d45b48;
   outline-offset: 3px;
+}
+
+.mission-complete-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #39705a;
+  cursor: pointer;
+}
+
+.mission-complete-checkbox:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.mission-list-select {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 
 .mission-list-copy {

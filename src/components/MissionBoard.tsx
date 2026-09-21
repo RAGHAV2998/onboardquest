@@ -44,30 +44,36 @@ export function MissionBoard({ board, onComplete }: MissionBoardProps) {
       <div className="mission-board-layout">
         <div className="mission-list" aria-label="First week missions">
           {board.missions.map((mission) => (
-            <button
+            <div
               key={mission.missionId}
               className="mission-list-item"
               data-selected={mission.missionId === selectedMission.missionId}
-              type="button"
-              onClick={() => setSelectedMissionId(mission.missionId)}
             >
-              <span
-                className={`objective-box${
-                  mission.status === 'completed'
-                    ? ' objective-box-complete'
-                    : ''
-                }`}
-                aria-hidden="true"
+              <input
+                className="mission-complete-checkbox"
+                type="checkbox"
+                checked={mission.status === 'completed'}
+                disabled={mission.status === 'completed'}
+                aria-label={`Mark ${mission.title} complete`}
+                onChange={() => {
+                  setSelectedMissionId(mission.missionId)
+                  onComplete(mission.missionId)
+                }}
               />
-              <span className="mission-list-copy">
-                <strong>{mission.title}</strong>
-                <small>{categoryLabels[mission.category]}</small>
-              </span>
-              <span className="mission-list-reward">+{mission.rewardXp} XP</span>
-              <span className="sr-only">
-                {mission.status === 'completed' ? ' completed' : ' available'}
-              </span>
-            </button>
+              <button
+                className="mission-list-select"
+                type="button"
+                onClick={() => setSelectedMissionId(mission.missionId)}
+              >
+                <span className="mission-list-copy">
+                  <strong>{mission.title}</strong>
+                  <small>{categoryLabels[mission.category]}</small>
+                </span>
+                <span className="mission-list-reward">
+                  +{mission.rewardXp} XP
+                </span>
+              </button>
+            </div>
           ))}
         </div>
 
