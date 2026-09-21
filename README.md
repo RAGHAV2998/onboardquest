@@ -16,6 +16,8 @@ or external analytics. Game content and progress remain in the browser.
 - Local progress persistence with a confirmed demo reset.
 - Read-only Content Studio with validation and dependency views.
 - Employee and manager insights, journey analytics, and JSON export.
+- Optional Microsoft or GitHub sign-in on Azure-hosted deployments.
+- Browser-local onboarding profile with display name, role, team, and start date.
 - Responsive React interface for desktop and mobile.
 
 ## Technology
@@ -55,6 +57,12 @@ Open the URL printed by Vite, normally `http://localhost:5173`.
 Progress is stored under the browser key `onboardquest.progress.v1`. Resetting
 progress removes that save and reloads the Day 1 experience. It does not alter
 the source-controlled content definitions.
+
+The hosted Azure app also supports optional Microsoft and GitHub sign-in through
+Azure Static Web Apps managed authentication. The onboarding profile is stored
+under `onboardquest.profile.v1`. Authentication identifies the current visitor,
+but profile and game progress remain local to the current browser and do not sync
+between devices.
 
 ## Where To Host It
 
@@ -167,6 +175,8 @@ npm run build
 - Phaser owns movement, collisions, entities, and proximity detection.
 - React owns panels, dashboards, menus, and accessible views.
 - Managers own progression and analytics logic.
+- `AuthManager` reads Azure managed identity without storing provider identifiers.
+- `ProfileStore` validates and persists optional profile fields in the browser.
 - The Content Registry owns local content loading and validation.
 - `localStorage` is the only progress store in the MVP.
 

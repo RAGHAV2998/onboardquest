@@ -4,6 +4,7 @@ import {
   AchievementNotifications,
   type QueuedAchievementNotification,
 } from './components/AchievementNotifications'
+import { AccountPanel } from './components/AccountPanel'
 import { CareerPaths } from './components/CareerPaths'
 import { ContentStudio } from './components/ContentStudio'
 import { DialoguePanel } from './components/DialoguePanel'
@@ -20,6 +21,8 @@ import { QuestPanel } from './components/QuestPanel'
 import { TerritoryMap } from './components/TerritoryMap'
 import { TerritoryProgressPanel } from './components/TerritoryProgressPanel'
 import { contentRegistry } from './content/ContentRegistry'
+import { AuthManager } from './app/AuthManager'
+import { ProfileStore } from './app/ProfileStore'
 import { createGame } from './game/createGame'
 import {
   onAchievementNotification,
@@ -46,6 +49,12 @@ import {
   requestTerritoryEntry,
 } from './game/events/gameEvents'
 import type { BadgeDefinition } from './types/badge'
+import type {
+  AuthState,
+  OnboardingProfile,
+  OnboardingProfileDraft,
+  ProfileSaveResult,
+} from './types/auth'
 import type { CareerState } from './types/career'
 import type { DialogueEntry } from './types/dialogue'
 import type { JourneyState } from './types/journey'
@@ -70,6 +79,10 @@ type AppView =
   | 'studio'
 
 function App() {
+  const [authManager] = useState(() => new AuthManager())
+  const [profileStore] = useState(
+    () => new ProfileStore(window.localStorage),
+  )
   const gameContainerRef = useRef<HTMLDivElement>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const [appView, setAppView] = useState<AppView>('world')
@@ -92,6 +105,13 @@ function App() {
   const [careerState, setCareerState] = useState<CareerState | null>(null)
   const [oracleState, setOracleState] = useState<OracleState | null>(null)
   const [insights, setInsights] = useState<InsightsSnapshot | null>(null)
+  const [authState, setAuthState] = useState<AuthState>({
+    status: 'loading',
+    managedAuthAvailable: false,
+    user: null,
+  })
+  const [onboardingProfile, setOnboardingProfile] =
+    useState<OnboardingProfile | null>(() => profileStore.getProfile())
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress | null>(
     null,
   )
@@ -102,6 +122,20 @@ function App() {
     readonly QueuedAchievementNotification[]
   >([])
   const nextNotificationIdRef = useRef(1)
+
+  useEffect(() => {
+    let active = true
+
+    void authManager.load().then((state) => {
+      if (active) {
+        setAuthState(state)
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [authManager])
 
   useEffect(() => {
     const gameContainer = gameContainerRef.current
@@ -249,6 +283,18 @@ function App() {
     setAppView('world')
   }
 
+  const saveOnboardingProfile = (
+    draft: OnboardingProfileDraft,
+  ): ProfileSaveResult => {
+    const result = profileStore.save(draft)
+
+    if (result.ok) {
+      setOnboardingProfile(result.profile)
+    }
+
+    return result
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -319,6 +365,14 @@ function App() {
             </button>
           </div>
           <span className="prototype-label">Local prototype</span>
+          <AccountPanel
+            auth={authState}
+            profile={onboardingProfile}
+            microsoftLoginUrl={authManager.getLoginUrl('aad')}
+            githubLoginUrl={authManager.getLoginUrl('github')}
+            logoutUrl={authManager.getLogoutUrl()}
+            onSaveProfile={saveOnboardingProfile}
+          />
         </div>
       </header>
 
