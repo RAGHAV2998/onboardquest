@@ -9,6 +9,10 @@ import {
 import { DialogueStateManager } from '../systems/DialogueStateManager'
 import { getGameState, type GameState } from '../systems/GameState'
 import { InteractionSystem } from '../systems/InteractionSystem'
+import {
+  getVirtualInput,
+  type VirtualInputManager,
+} from '../systems/VirtualInputManager'
 
 type MovementKeys = {
   up: Phaser.Input.Keyboard.Key
@@ -31,6 +35,7 @@ export class MentorTowerScene extends Phaser.Scene {
   private oraclePedestal!: OraclePedestal
   private interactionKey!: Phaser.Input.Keyboard.Key
   private gameState!: GameState
+  private virtualInput!: VirtualInputManager
 
   constructor() {
     super('mentor-tower')
@@ -38,8 +43,10 @@ export class MentorTowerScene extends Phaser.Scene {
 
   create(): void {
     this.gameState = getGameState(this)
+    this.virtualInput = getVirtualInput(this)
     emitActiveTerritoryChanged('mentor-tower')
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.virtualInput.reset()
       emitDialogueChanged(null)
       this.gameState.closeOracle()
     })
@@ -75,14 +82,26 @@ export class MentorTowerScene extends Phaser.Scene {
 
     if (this.dialogueStateManager.isOpen) {
       this.playerBody.setVelocity(0, 0)
-      this.dialogueStateManager.update()
+      this.dialogueStateManager.update(this.virtualInput.consumeAdvance())
       return
     }
 
-    const left = this.cursors.left.isDown || this.movementKeys.left.isDown
-    const right = this.cursors.right.isDown || this.movementKeys.right.isDown
-    const up = this.cursors.up.isDown || this.movementKeys.up.isDown
-    const down = this.cursors.down.isDown || this.movementKeys.down.isDown
+    const left =
+      this.cursors.left.isDown ||
+      this.movementKeys.left.isDown ||
+      this.virtualInput.isDirectionPressed('left')
+    const right =
+      this.cursors.right.isDown ||
+      this.movementKeys.right.isDown ||
+      this.virtualInput.isDirectionPressed('right')
+    const up =
+      this.cursors.up.isDown ||
+      this.movementKeys.up.isDown ||
+      this.virtualInput.isDirectionPressed('up')
+    const down =
+      this.cursors.down.isDown ||
+      this.movementKeys.down.isDown ||
+      this.virtualInput.isDirectionPressed('down')
     const horizontal = Number(right) - Number(left)
     const vertical = Number(down) - Number(up)
     const speed = 220
@@ -93,8 +112,9 @@ export class MentorTowerScene extends Phaser.Scene {
       this.playerBody.velocity.normalize().scale(speed)
     }
 
-    this.interactionSystem.update()
-    this.updateOracleInteraction()
+    const interactionRequested = this.virtualInput.consumeInteraction()
+    this.interactionSystem.update(interactionRequested)
+    this.updateOracleInteraction(interactionRequested)
   }
 
   private drawTower(): void {
@@ -259,7 +279,7 @@ export class MentorTowerScene extends Phaser.Scene {
     }
   }
 
-  private updateOracleInteraction(): void {
+  private updateOracleInteraction(interactionRequested = false): void {
     const nearby = Phaser.Math.Distance.Between(
       this.player.x,
       this.player.y,
@@ -269,7 +289,11 @@ export class MentorTowerScene extends Phaser.Scene {
 
     this.oraclePedestal.setInteractionAvailable(nearby)
 
-    if (nearby && Phaser.Input.Keyboard.JustDown(this.interactionKey)) {
+    if (
+      nearby &&
+      (interactionRequested ||
+        Phaser.Input.Keyboard.JustDown(this.interactionKey))
+    ) {
       this.playerBody.setVelocity(0, 0)
       this.gameState.openOracle('mentor-tower')
     }

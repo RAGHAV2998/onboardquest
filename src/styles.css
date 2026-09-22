@@ -429,6 +429,10 @@ h1 {
   display: block;
 }
 
+.mobile-controls {
+  display: none;
+}
+
 .dialogue-panel {
   position: absolute;
   right: 24px;
@@ -2376,6 +2380,130 @@ h1 {
 
   .quest-panel {
     padding: 16px;
+  }
+}
+
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  .mobile-controls {
+    display: grid;
+    grid-template-columns: 152px minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+    min-height: 168px;
+    padding: 10px 14px;
+    border-top: 2px solid #1d2a24;
+    background: #25372f;
+    color: #fff8e8;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .mobile-direction-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(3, 48px);
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .mobile-direction-button,
+  .mobile-action-button {
+    border: 2px solid #fff8e8;
+    border-radius: 4px;
+    background: #385d78;
+    color: #fff8e8;
+    cursor: pointer;
+    font-weight: 700;
+    touch-action: none;
+  }
+
+  .mobile-direction-button {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    padding: 0;
+    font-size: 23px;
+    line-height: 1;
+  }
+
+  .mobile-direction-up {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mobile-direction-left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .mobile-direction-down {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .mobile-direction-right {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .mobile-action-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .mobile-action-button {
+    min-width: 0;
+    min-height: 54px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .mobile-continue-button {
+    background: #39705a;
+  }
+
+  .mobile-direction-button:active:not(:disabled),
+  .mobile-action-button:active:not(:disabled) {
+    background: #d45b48;
+    transform: translateY(1px);
+  }
+
+  .mobile-direction-button:focus-visible,
+  .mobile-action-button:focus-visible {
+    outline: 3px solid #f3c95e;
+    outline-offset: 2px;
+  }
+
+  .mobile-direction-button:disabled,
+  .mobile-action-button:disabled {
+    border-color: #718077;
+    background: #3c4c44;
+    color: #8f9d95;
+    cursor: default;
+  }
+
+  .game-frame-dialogue-open .dialogue-panel {
+    bottom: 178px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-controls {
+    grid-template-columns: 152px minmax(0, 1fr);
+    gap: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .mobile-action-controls {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .mobile-action-button {
+    min-height: 48px;
   }
 }
 

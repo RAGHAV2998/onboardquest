@@ -14,6 +14,10 @@ import {
 import { InteractionSystem } from '../systems/InteractionSystem'
 import { DialogueStateManager } from '../systems/DialogueStateManager'
 import { getGameState, type GameState } from '../systems/GameState'
+import {
+  getVirtualInput,
+  type VirtualInputManager,
+} from '../systems/VirtualInputManager'
 
 type MovementKeys = {
   up: Phaser.Input.Keyboard.Key
@@ -30,6 +34,7 @@ export class TeamVillageScene extends Phaser.Scene {
   private interactionSystem!: InteractionSystem
   private dialogueStateManager!: DialogueStateManager
   private gameState!: GameState
+  private virtualInput!: VirtualInputManager
 
   constructor() {
     super('team-village')
@@ -37,8 +42,10 @@ export class TeamVillageScene extends Phaser.Scene {
 
   create(): void {
     this.gameState = getGameState(this)
+    this.virtualInput = getVirtualInput(this)
     emitActiveTerritoryChanged('team')
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.virtualInput.reset()
       emitDialogueChanged(null)
     })
     this.drawVillage()
@@ -107,14 +114,26 @@ export class TeamVillageScene extends Phaser.Scene {
   update(): void {
     if (this.dialogueStateManager.isOpen) {
       this.playerBody.setVelocity(0, 0)
-      this.dialogueStateManager.update()
+      this.dialogueStateManager.update(this.virtualInput.consumeAdvance())
       return
     }
 
-    const left = this.cursors.left.isDown || this.movementKeys.left.isDown
-    const right = this.cursors.right.isDown || this.movementKeys.right.isDown
-    const up = this.cursors.up.isDown || this.movementKeys.up.isDown
-    const down = this.cursors.down.isDown || this.movementKeys.down.isDown
+    const left =
+      this.cursors.left.isDown ||
+      this.movementKeys.left.isDown ||
+      this.virtualInput.isDirectionPressed('left')
+    const right =
+      this.cursors.right.isDown ||
+      this.movementKeys.right.isDown ||
+      this.virtualInput.isDirectionPressed('right')
+    const up =
+      this.cursors.up.isDown ||
+      this.movementKeys.up.isDown ||
+      this.virtualInput.isDirectionPressed('up')
+    const down =
+      this.cursors.down.isDown ||
+      this.movementKeys.down.isDown ||
+      this.virtualInput.isDirectionPressed('down')
     const horizontal = Number(right) - Number(left)
     const vertical = Number(down) - Number(up)
     const speed = 220
@@ -125,7 +144,7 @@ export class TeamVillageScene extends Phaser.Scene {
       this.playerBody.velocity.normalize().scale(speed)
     }
 
-    this.interactionSystem.update()
+    this.interactionSystem.update(this.virtualInput.consumeInteraction())
   }
 
   private drawVillage(): void {

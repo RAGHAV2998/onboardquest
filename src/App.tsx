@@ -13,6 +13,7 @@ import { ExecutiveInsightsDashboard } from './components/ExecutiveInsightsDashbo
 import { JourneyCompletionScreen } from './components/JourneyCompletionScreen'
 import { JourneyMap } from './components/JourneyMap'
 import { MentorProfilePanel } from './components/MentorProfilePanel'
+import { MobileControls } from './components/MobileControls'
 import { MissionBoard } from './components/MissionBoard'
 import { OraclePanel } from './components/OraclePanel'
 import { PlayerProfile } from './components/PlayerProfile'
@@ -24,6 +25,7 @@ import { contentRegistry } from './content/ContentRegistry'
 import { AuthManager } from './app/AuthManager'
 import { ProfileStore } from './app/ProfileStore'
 import { createGame } from './game/createGame'
+import { VirtualInputManager } from './game/systems/VirtualInputManager'
 import {
   onAchievementNotification,
   onActiveTerritoryChanged,
@@ -83,6 +85,7 @@ function App() {
   const [profileStore] = useState(
     () => new ProfileStore(window.localStorage),
   )
+  const [virtualInput] = useState(() => new VirtualInputManager())
   const gameContainerRef = useRef<HTMLDivElement>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const [appView, setAppView] = useState<AppView>('world')
@@ -204,7 +207,7 @@ function App() {
     const unsubscribeCareerState = onCareerStateChanged(setCareerState)
     const unsubscribeOracleState = onOracleStateChanged(setOracleState)
     const unsubscribeInsights = onInsightsChanged(setInsights)
-    const game = createGame(gameContainer)
+    const game = createGame(gameContainer, virtualInput)
     gameRef.current = game
 
     return () => {
@@ -225,10 +228,11 @@ function App() {
       game.destroy(true)
       gameRef.current = null
     }
-  }, [])
+  }, [virtualInput])
 
   useEffect(() => {
     if (appView !== 'world') {
+      virtualInput.reset()
       return
     }
 
@@ -239,7 +243,7 @@ function App() {
     return () => {
       window.cancelAnimationFrame(frameId)
     }
-  }, [appView])
+  }, [appView, virtualInput])
 
   const activeTerritory = territoryStates.find(
     ({ territoryId }) => territoryId === activeTerritoryId,
@@ -382,7 +386,12 @@ function App() {
         }`}
         aria-hidden={appView !== 'world'}
       >
-        <section className="game-frame" aria-labelledby="scene-title">
+        <section
+          className={`game-frame${
+            activeDialogue ? ' game-frame-dialogue-open' : ''
+          }`}
+          aria-labelledby="scene-title"
+        >
           <p id="game-controls" className="sr-only">
             Use the arrow keys or W, A, S, and D to move the player. Press E
             when the talk indicator appears near a team member.
@@ -397,6 +406,12 @@ function App() {
             state={oracleState}
             onAsk={requestOracleQuestion}
             onClose={requestOracleClose}
+          />
+          <MobileControls
+            input={virtualInput}
+            dialogueOpen={activeDialogue !== null}
+            interactionEnabled={activeTerritoryId !== 'documentation'}
+            disabled={appView !== 'world' || (oracleState?.isOpen ?? false)}
           />
         </section>
 

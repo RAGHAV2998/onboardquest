@@ -17,7 +17,7 @@ export class InteractionSystem {
     private readonly onInteract: (npc: Npc) => void,
   ) {}
 
-  update(): void {
+  update(interactionRequested = false): void {
     if (!this.enabled) {
       return
     }
@@ -32,7 +32,8 @@ export class InteractionSystem {
 
     if (
       this.activeNpc &&
-      Phaser.Input.Keyboard.JustDown(this.interactionKey)
+      (interactionRequested ||
+        Phaser.Input.Keyboard.JustDown(this.interactionKey))
     ) {
       this.onInteract(this.activeNpc)
     }

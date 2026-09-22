@@ -57,10 +57,11 @@ export class DialogueStateManager {
     return true
   }
 
-  update(): void {
+  update(advanceRequested = false): void {
     if (
       this.activeDialogue &&
-      this.advanceKeys.some((key) => Phaser.Input.Keyboard.JustDown(key))
+      (advanceRequested ||
+        this.advanceKeys.some((key) => Phaser.Input.Keyboard.JustDown(key)))
     ) {
       this.advance()
     }

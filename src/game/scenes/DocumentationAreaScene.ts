@@ -2,6 +2,10 @@ import Phaser from 'phaser'
 import { DiscoveryObject } from '../entities/DiscoveryObject'
 import { emitActiveTerritoryChanged } from '../events/gameEvents'
 import { getGameState, type GameState } from '../systems/GameState'
+import {
+  getVirtualInput,
+  type VirtualInputManager,
+} from '../systems/VirtualInputManager'
 
 type MovementKeys = {
   up: Phaser.Input.Keyboard.Key
@@ -21,6 +25,7 @@ export class DocumentationAreaScene extends Phaser.Scene {
   private movementKeys!: MovementKeys
   private discoveryObjects: readonly DiscoveryObject[] = []
   private gameState!: GameState
+  private virtualInput!: VirtualInputManager
 
   constructor() {
     super('documentation-area')
@@ -28,6 +33,10 @@ export class DocumentationAreaScene extends Phaser.Scene {
 
   create(): void {
     this.gameState = getGameState(this)
+    this.virtualInput = getVirtualInput(this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.virtualInput.reset()
+    })
     emitActiveTerritoryChanged('documentation')
     this.drawArea()
     this.physics.world.setBounds(
@@ -52,10 +61,22 @@ export class DocumentationAreaScene extends Phaser.Scene {
   }
 
   update(): void {
-    const left = this.cursors.left.isDown || this.movementKeys.left.isDown
-    const right = this.cursors.right.isDown || this.movementKeys.right.isDown
-    const up = this.cursors.up.isDown || this.movementKeys.up.isDown
-    const down = this.cursors.down.isDown || this.movementKeys.down.isDown
+    const left =
+      this.cursors.left.isDown ||
+      this.movementKeys.left.isDown ||
+      this.virtualInput.isDirectionPressed('left')
+    const right =
+      this.cursors.right.isDown ||
+      this.movementKeys.right.isDown ||
+      this.virtualInput.isDirectionPressed('right')
+    const up =
+      this.cursors.up.isDown ||
+      this.movementKeys.up.isDown ||
+      this.virtualInput.isDirectionPressed('up')
+    const down =
+      this.cursors.down.isDown ||
+      this.movementKeys.down.isDown ||
+      this.virtualInput.isDirectionPressed('down')
     const horizontal = Number(right) - Number(left)
     const vertical = Number(down) - Number(up)
     const speed = 220

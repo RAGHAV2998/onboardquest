@@ -16,8 +16,15 @@ import {
   GAME_STATE_REGISTRY_KEY,
   GameState,
 } from './systems/GameState'
+import {
+  VIRTUAL_INPUT_REGISTRY_KEY,
+  type VirtualInputManager,
+} from './systems/VirtualInputManager'
 
-export function createGame(parent: HTMLElement): Phaser.Game {
+export function createGame(
+  parent: HTMLElement,
+  virtualInput: VirtualInputManager,
+): Phaser.Game {
   let gameState: GameState | null = null
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -39,6 +46,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
       preBoot: (phaserGame) => {
         gameState = new GameState(window.localStorage)
         phaserGame.registry.set(GAME_STATE_REGISTRY_KEY, gameState)
+        phaserGame.registry.set(VIRTUAL_INPUT_REGISTRY_KEY, virtualInput)
       },
     },
     scene: [TeamVillageScene, DocumentationAreaScene, MentorTowerScene],
@@ -109,6 +117,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
   })
 
   game.events.once(Phaser.Core.Events.DESTROY, () => {
+    virtualInput.reset()
     unsubscribe()
     unsubscribeMissionCompletion()
     unsubscribeCareerPathSelection()
